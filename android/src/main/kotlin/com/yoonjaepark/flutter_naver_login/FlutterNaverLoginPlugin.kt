@@ -28,6 +28,7 @@ import android.util.Log
 import com.navercorp.nid.NaverIdLoginSDK
 import com.navercorp.nid.oauth.NidOAuthLogin
 import com.navercorp.nid.oauth.OAuthLoginCallback
+import com.navercorp.nid.oauth.*
 
 /** FlutterNaverLoginPlugin */
 class FlutterNaverLoginPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
@@ -172,6 +173,13 @@ class FlutterNaverLoginPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
   }
 
   private fun login(result: Result) {
+    val pm: PackageManager = mContext!!.getPackageManager();
+    val isInstalled = isNaverAppInstalled(pm);
+    if (!isInstalled) {
+      NaverIdLoginSDK.behavior = NidOAuthBehavior.WEBVIEW;
+    } else {
+      NaverIdLoginSDK.behavior = NidOAuthBehavior.NAVERAPP;
+    }
     val mOAuthLoginHandler = object : OAuthLoginCallback {
       override fun onSuccess() {
         currentAccount(result)
@@ -287,5 +295,14 @@ class FlutterNaverLoginPlugin: FlutterPlugin, MethodCallHandler, ActivityAware {
       map[key] = value
     }
     return map
+  }
+
+  private fun isNaverAppInstalled(packageManager: PackageManager): Boolean {
+    return try {
+      packageManager.getPackageInfo("com.nhn.android.search", 0)
+      true
+    } catch (e: PackageManager.NameNotFoundException) {
+      false
+    }
   }
 }
